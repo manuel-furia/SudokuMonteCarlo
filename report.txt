@@ -1,0 +1,291 @@
+-- Algorithm:
+
+The program solves most of the sudoku puzzles by annealing simulation.
+It can solve normal difficulty sudokus in 1000 to 1000000 steps, and really hard sudokus in less than 100 millions steps if the right temperature is found.
+The sudoku is read from a file, and the empty spaces are filled with the missing numbers in each square, in random positions.
+NOTE: In this way, a square can not have duplicates, but a row or a columns can have duplicates.
+The transition used consists in swapping two elements in a square.
+The quality function is the sum of the duplicates in every row and column, and the aim is to minimize that number to 0.
+
+-- How to use:
+
+./sudoku filename T_scale T_func
+
+T_func (decay function of the temperature) can be:
+s -> sqrt
+1 -> linear
+2 -> quadratic
+3 -> cubic
+4 -> 4th power
+o -> 4th power sawtooth shape, with 4-th power dampening
+And the temperature function used will be T(t) = T_scale * T_func(x)
+Use 'o' for the most difficult sudokus.
+
+-- What does the program show:
+
+At first, it prints the sudoku as it is read from the file. Then runs the algorithm and print the solution (and the number of steps used) if found. It also prints the number of steps and quality function every 1 million steps.
+If a solution is not found, the program keeps going up to 100 million steps.
+It also always prints the number of rejected transitions, which is helpful for understanding how the temperature is affecting the algorithm.
+
+-- Solutions for the given sudokus (also pretty_hard and really_hard):
+
+---- sudoku_example1.txt: (T_scale = 0.5, T_func = (1-t)^4)
+
+./sudoku sudoku_example1.txt 0.5 4
+-------------------------------
+| 9  7    | 3     4 |    6  5 |
+|    2    | 5     6 |    8    |
+|         |         |         |
+-------------------------------
+|       5 | 8     2 | 9       |
+|       2 |    4    | 3       |
+|       8 | 7     5 | 1       |
+-------------------------------
+|         |         |         |
+|    6    | 2     8 |    3    |
+| 8  4    | 1     9 |    2  7 |
+-------------------------------
+Iteration: 0; Quality factor: 42
+Solution found at iteration number: 2413
+Number of rejected transition: 1681
+-------------------------------
+| 9  7  1 | 3  8  4 | 2  6  5 |
+| 3  2  4 | 5  1  6 | 7  8  9 |
+| 5  8  6 | 9  2  7 | 4  1  3 |
+-------------------------------
+| 4  1  5 | 8  3  2 | 9  7  6 |
+| 7  9  2 | 6  4  1 | 3  5  8 |
+| 6  3  8 | 7  9  5 | 1  4  2 |
+-------------------------------
+| 2  5  7 | 4  6  3 | 8  9  1 |
+| 1  6  9 | 2  7  8 | 5  3  4 |
+| 8  4  3 | 1  5  9 | 6  2  7 |
+-------------------------------
+
+
+---- sudoku_example2.txt: (T_scale = 0.5, T_func = (1-t)^4)
+
+./sudoku sudoku_example2.txt 0.5 4
+-------------------------------
+|    7    |         |    6  1 |
+| 6       |    4    |         |
+|         | 1       | 3       |
+-------------------------------
+|    4  8 |         | 6       |
+|       7 | 8  6    |    2    |
+| 3       |    9    | 5       |
+-------------------------------
+| 5  9    | 6     8 |    1  4 |
+| 8       |         | 2  9  5 |
+| 7  2    | 9       |    3    |
+-------------------------------
+Iteration: 0; Quality factor: 39
+Solution found at iteration number: 117378
+Number of rejected transition: 85289
+-------------------------------
+| 2  7  5 | 3  8  9 | 4  6  1 |
+| 6  3  1 | 5  4  2 | 9  8  7 |
+| 4  8  9 | 1  7  6 | 3  5  2 |
+-------------------------------
+| 1  4  8 | 2  5  3 | 6  7  9 |
+| 9  5  7 | 8  6  4 | 1  2  3 |
+| 3  6  2 | 7  9  1 | 5  4  8 |
+-------------------------------
+| 5  9  3 | 6  2  8 | 7  1  4 |
+| 8  1  6 | 4  3  7 | 2  9  5 |
+| 7  2  4 | 9  1  5 | 8  3  6 |
+------------------------------
+
+
+---- sudoku_example3.txt: (T_scale = 0.5, T_func = (1-t)^4)
+
+./sudoku sudoku_example3.txt 0.5 4
+-------------------------------
+|    3  6 |         | 1       |
+|         | 8  1    |       2 |
+| 1       |       5 |       9 |
+-------------------------------
+|       1 | 6     7 |    5    |
+|    5    |    9    |    3    |
+|    4    | 2     8 | 9       |
+-------------------------------
+| 5       | 9       |       7 |
+| 4       |    7  2 |         |
+|       9 |         | 8  6    |
+-------------------------------
+Iteration: 0; Quality factor: 47
+Solution found at iteration number: 19588
+Number of rejected transition: 14628
+-------------------------------
+| 8  3  6 | 4  2  9 | 1  7  5 |
+| 7  9  5 | 8  1  3 | 6  4  2 |
+| 1  2  4 | 7  6  5 | 3  8  9 |
+-------------------------------
+| 9  8  1 | 6  3  7 | 2  5  4 |
+| 6  5  2 | 1  9  4 | 7  3  8 |
+| 3  4  7 | 2  5  8 | 9  1  6 |
+-------------------------------
+| 5  1  3 | 9  8  6 | 4  2  7 |
+| 4  6  8 | 3  7  2 | 5  9  1 |
+| 2  7  9 | 5  4  1 | 8  6  3 |
+-------------------------------
+
+
+---- sudoku_example4.txt: (T_scale = 0.5, T_func = (1-t)^4)
+
+./sudoku sudoku_example4.txt 0.5 4
+-------------------------------
+| 6       |         |    7  4 |
+| 9  4    | 7     1 |       6 |
+| 2       |    4    |         |
+-------------------------------
+|    5    |       8 |         |
+| 1     2 |         | 4     8 |
+|         | 6       |    3    |
+-------------------------------
+|         |    9    |       7 |
+| 7       | 3     2 |    5  1 |
+| 5  6    |         |       9 |
+-------------------------------
+Iteration: 0; Quality factor: 43
+Solution found at iteration number: 210472
+Number of rejected transition: 153357
+-------------------------------
+| 6  1  5 | 2  8  3 | 9  7  4 |
+| 9  4  3 | 7  5  1 | 2  8  6 |
+| 2  8  7 | 9  4  6 | 5  1  3 |
+-------------------------------
+| 4  5  6 | 1  3  8 | 7  9  2 |
+| 1  3  2 | 5  7  9 | 4  6  8 |
+| 8  7  9 | 6  2  4 | 1  3  5 |
+-------------------------------
+| 3  2  1 | 8  9  5 | 6  4  7 |
+| 7  9  4 | 3  6  2 | 8  5  1 |
+| 5  6  8 | 4  1  7 | 3  2  9 |
+-------------------------------
+
+---- sudoku_example_prettyhard_not_required.txt: (T_scale = 0.5, T_func = (1-t)^4)
+
+./sudoku sudoku_example_prettyhard_not_required.txt 0.5 4
+-------------------------------
+| 7     8 |         | 3       |
+|         | 2     1 |         |
+| 5       |         |         |
+-------------------------------
+|       4 |         |       2 |
+| 6  3    |       8 |         |
+|         |    1    |         |
+-------------------------------
+|         |         |       9 |
+|       9 |    6    |         |
+| 4       |       7 |    5    |
+-------------------------------
+Iteration: 0; Quality factor: 42
+Solution found at iteration number: 69784
+Number of rejected transition: 52364
+-------------------------------
+| 7  2  8 | 9  4  5 | 3  1  6 |
+| 3  9  6 | 2  7  1 | 8  4  5 |
+| 5  4  1 | 6  8  3 | 9  2  7 |
+-------------------------------
+| 8  1  4 | 3  5  9 | 6  7  2 |
+| 6  3  5 | 7  2  8 | 1  9  4 |
+| 9  7  2 | 4  1  6 | 5  8  3 |
+-------------------------------
+| 1  8  7 | 5  3  2 | 4  6  9 |
+| 2  5  9 | 8  6  4 | 7  3  1 |
+| 4  6  3 | 1  9  7 | 2  5  8 |
+-------------------------------
+
+
+---- sudoku_example_reallyhard_not_required.txt: (T_scale = 20.5, T_func = (1-t)^4 * (sawtooth(t))^4)
+
+./sudoku sudoku_example_reallyhard_not_required.txt 20.5 o
+-------------------------------
+|         |         |    1  5 |
+|         | 8  3    |         |
+|         |         | 2       |
+-------------------------------
+|    2  3 |         | 8       |
+|         |       1 |         |
+|    8    |         |         |
+-------------------------------
+| 1     5 |    4    |         |
+|         | 6       | 7  2    |
+| 9       |         |         |
+-------------------------------
+Iteration: 0; Quality factor: 50
+Iteration: 1000000; Quality factor: 2
+Iteration: 2000000; Quality factor: 2
+Iteration: 3000000; Quality factor: 2
+Iteration: 4000000; Quality factor: 2
+Iteration: 5000000; Quality factor: 4
+Iteration: 6000000; Quality factor: 2
+Iteration: 7000000; Quality factor: 2
+Iteration: 8000000; Quality factor: 3
+Iteration: 9000000; Quality factor: 2
+Iteration: 10000000; Quality factor: 2
+Iteration: 11000000; Quality factor: 4
+Iteration: 12000000; Quality factor: 2
+Iteration: 13000000; Quality factor: 4
+Iteration: 14000000; Quality factor: 2
+Iteration: 15000000; Quality factor: 2
+Iteration: 16000000; Quality factor: 2
+Iteration: 17000000; Quality factor: 2
+Solution found at iteration number: 17183223
+Number of rejected transition: 8332747
+-------------------------------
+| 2  4  8 | 9  6  7 | 3  1  5 |
+| 5  1  6 | 8  3  2 | 9  4  7 |
+| 3  9  7 | 1  5  4 | 2  6  8 |
+-------------------------------
+| 4  2  3 | 5  9  6 | 8  7  1 |
+| 6  5  9 | 7  8  1 | 4  3  2 |
+| 7  8  1 | 4  2  3 | 5  9  6 |
+-------------------------------
+| 1  7  5 | 2  4  9 | 6  8  3 |
+| 8  3  4 | 6  1  5 | 7  2  9 |
+| 9  6  2 | 3  7  8 | 1  5  4 |
+-------------------------------
+
+---- sudoku_example_reallyhard2_not_required.txt: (T_scale = 0.5, T_func = (1-t)^4 * (sawtooth(t))^4)
+
+./sudoku sudoku_example_reallyhard2_not_required.txt 0.5 o
+-------------------------------
+|         |         |    1  2 |
+|       8 |    3    |         |
+|         |         |    4    |
+-------------------------------
+| 1  2    | 5       |         |
+|         |       4 | 7       |
+|    6    |         |         |
+-------------------------------
+| 5     7 |         | 3       |
+|         | 6  2    |         |
+|         | 1       |         |
+-------------------------------
+Iteration: 0; Quality factor: 47
+Iteration: 1000000; Quality factor: 2
+Iteration: 2000000; Quality factor: 2
+Iteration: 3000000; Quality factor: 2
+Iteration: 4000000; Quality factor: 4
+Solution found at iteration number: 4414961
+Number of rejected transition: 3732260
+-------------------------------
+| 3  4  6 | 7  9  5 | 8  1  2 |
+| 2  5  8 | 4  3  1 | 6  9  7 |
+| 9  7  1 | 8  6  2 | 5  4  3 |
+-------------------------------
+| 1  2  9 | 5  7  6 | 4  3  8 |
+| 8  3  5 | 2  1  4 | 7  6  9 |
+| 7  6  4 | 3  8  9 | 2  5  1 |
+-------------------------------
+| 5  1  7 | 9  4  8 | 3  2  6 |
+| 4  9  3 | 6  2  7 | 1  8  5 |
+| 6  8  2 | 1  5  3 | 9  7  4 |
+-------------------------------
+
+-- Final notes:
+
+The algorithm can solve most sudokus in 1000 to 1000000 steps, with a temperature between 0.3 and 1.0, and T_func = (1-t)^4. Higher temperatures applied on simple sudokus raise the number of step needed. The pretty_hard sudoku can also be solved easily with these parameters.
+To solve the really hard sudokus, it was necessary to use a sawtooth function, shaped as (1-t)^4 with dampening (see osc_decay() in functions.c). The really_hard_2 sudoku can be solved with the normal T = 0.5 in a reasonable amount of steps, meanwhile the really_hard is unsolvable for most temperature. With some trial I have managed to find a temperature T = 20.5 by which the sudoku is solved in 17183223 steps.
